@@ -1,0 +1,9 @@
+road 1 Sam 20 4;
+road 2 Merry 20 4;
+road 3 Pipppin 20 4;
+town 4 Hobbiton;
+road 5 Gandalf 75 8;
+town 6 Bree;
+road 7 Aragorn 50 10;
+town 8 Bree;
+road 9 Nazgul 100 10;
