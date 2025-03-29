@@ -36,7 +36,15 @@ bool addStranger(Player *party, int *partySize, Encounter encounter);
 void removeMember(Player *party, int *partySize, int memberNum);
 bool fight(Player *party, int *partySize, Encounter encounter);
 
-int main() {
+// Define export for functions (Windows vs GCC)
+#ifdef _WIN32
+    #define EXPORT __declspec(dllexport)
+#else
+    #define EXPORT __attribute__((visibility("default")))
+#endif
+
+// Function to be called from Python (Flask)
+EXPORT void start_game() {
     srand(time(NULL)); // Random seed
     printf("Hello! Welcome to Generic Adventure Game (TM)!\n");
 
@@ -51,7 +59,7 @@ int main() {
     Encounter *encounterList = readfile(&encounterCount);
     if (!encounterList) {
         printf("No encounters loaded. Exiting...\n");
-        return 1;
+        return;
     }
     sortEncounter(encounterList, encounterCount);
 
@@ -60,15 +68,14 @@ int main() {
         if (encountering(encounterList[i], &player, party, &partySize)) {
             printf("Game Over.\n");
             free(encounterList);
-            return 0;
+            return;
         }
     }
     free(encounterList);
-    return 0;
 }
 
 // Function to read encounters from file
-Encounter* readfile(int *encounterCount) {
+EXPORT Encounter* readfile(int *encounterCount) {
     FILE *f = fopen("config.txt", "r");
     if (!f) {
         printf("Error: File not found\n");
@@ -91,7 +98,7 @@ Encounter* readfile(int *encounterCount) {
     int index = 0;
     while (fgets(line, BUFFER, f)) {
         Encounter encounter;
-        sscanf(line, "%s %d %[^]", encounter.type, &encounter.time, encounter.detail);
+        sscanf(line, "%s %d %s", encounter.type, &encounter.time, encounter.detail);
         if (strcmp(encounter.type, "road") == 0) {
             sscanf(encounter.detail, "%s %d %d", encounter.name, &encounter.health, &encounter.damage);
         }
@@ -102,7 +109,7 @@ Encounter* readfile(int *encounterCount) {
 }
 
 // Sort encounters using Bubble Sort
-void sortEncounter(Encounter encounterList[], int size) {
+EXPORT void sortEncounter(Encounter encounterList[], int size) {
     for (int i = 0; i < size - 1; i++) {
         for (int j = 0; j < size - i - 1; j++) {
             if (encounterList[j].time > encounterList[j + 1].time) {
@@ -115,7 +122,7 @@ void sortEncounter(Encounter encounterList[], int size) {
 }
 
 // Function to create the main character
-Player playerCreation() {
+EXPORT Player playerCreation() {
     Player player;
     printf("Enter your name: ");
     fgets(player.name, sizeof(player.name), stdin);
@@ -127,7 +134,7 @@ Player playerCreation() {
 }
 
 // Function to display the party
-void displayParty(Player *party, int partySize) {
+EXPORT void displayParty(Player *party, int partySize) {
     printf("Your current party:\n");
     for (int i = 0; i < partySize; i++) {
         printf("%d: %s (Health: %d/%d, Damage: %d)\n", i + 1, party[i].name, party[i].currHealth, party[i].maxHealth, party[i].damage);
@@ -135,7 +142,7 @@ void displayParty(Player *party, int partySize) {
 }
 
 // Function to process encounters
-bool encountering(Encounter encounter, Player *player, Player *party, int *partySize) {
+EXPORT bool encountering(Encounter encounter, Player *player, Player *party, int *partySize) {
     if (strcmp(encounter.type, "town") == 0) {
         printf("Resting in %s. Party fully healed!\n", encounter.detail);
         for (int i = 0; i < *partySize; i++) party[i].currHealth = party[i].maxHealth;
@@ -159,7 +166,7 @@ bool encountering(Encounter encounter, Player *player, Player *party, int *party
 }
 
 // Function to add a new character to the party
-bool addStranger(Player *party, int *partySize, Encounter encounter) {
+EXPORT bool addStranger(Player *party, int *partySize, Encounter encounter) {
     if (*partySize < MAX_PARTY_SIZE) {
         strcpy(party[*partySize].name, encounter.name);
         party[*partySize].currHealth = encounter.health;
@@ -172,7 +179,7 @@ bool addStranger(Player *party, int *partySize, Encounter encounter) {
 }
 
 // Function to handle fights
-bool fight(Player *party, int *partySize, Encounter encounter) {
+EXPORT bool fight(Player *party, int *partySize, Encounter encounter) {
     Player enemy = {"", encounter.health, encounter.health, encounter.damage};
     strcpy(enemy.name, encounter.name);
 
@@ -192,7 +199,7 @@ bool fight(Player *party, int *partySize, Encounter encounter) {
     return false;
 }
 
-void removeMember(Player *party, int *partySize, int memberNum) {
+EXPORT void removeMember(Player *party, int *partySize, int memberNum) {
     for (int i = memberNum - 1; i < *partySize - 1; i++) {
         party[i] = party[i + 1];
     }
